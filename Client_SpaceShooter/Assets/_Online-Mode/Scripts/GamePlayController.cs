@@ -11,6 +11,9 @@ public class GamePlayController : MonoBehaviour {
 		foreach(var player in GameMgr.instance.player_list){
 			GameObject player_obj = GameObject.Instantiate(PlayerPrefab[0],new Vector3(1,0,0)*Count ,Quaternion.identity);
 			player_obj.name = player.id;//场景中生成的GameObject名字改成id
+			if(player.id != GameMgr.instance.local_player_ID){
+				player_obj.GetComponent<PlayerController>().ctrlType = CtrlType.net;//网络同步
+			}
 			Count++;
 		}
 	}
@@ -18,7 +21,6 @@ public class GamePlayController : MonoBehaviour {
 	void Start () {
 		
 	}
-	
 	// Update is called once per frame
 	void Update () {
 		
