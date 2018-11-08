@@ -34,25 +34,38 @@ public partial class HandlePlayerMsg
 	}
 	
 	//更新信息
-	public void MsgUpdateInfo(Player player, ProtocolBase protoBase)
+	public void MsgSyncPlayerState(Player player, ProtocolBase protoBase)
 	{
 		//获取数值
 		int start = 0;
 		ProtocolBytes protocol = (ProtocolBytes)protoBase;
 		string protoName = protocol.GetString (start, ref start);
-		float x = protocol.GetFloat (start, ref start);
-		float y = protocol.GetFloat (start, ref start);
-		float z = protocol.GetFloat (start, ref start);
-		int score = player.data.score;
-		Scene.instance.UpdateInfo (player.id, x, y, z, score);
+
+        float pos_x = protocol.GetFloat(start, ref start);
+        float pos_y = protocol.GetFloat(start, ref start);
+        float pos_z = protocol.GetFloat(start, ref start);
+        float rot_x = protocol.GetFloat(start, ref start);
+        float rot_y = protocol.GetFloat(start, ref start);
+        float rot_z = protocol.GetFloat(start, ref start);
+        float vel_x = protocol.GetFloat(start, ref start);
+        float vel_y = protocol.GetFloat(start, ref start);
+        float vel_z = protocol.GetFloat(start, ref start);
+
+        //Scene.instance.UpdateInfo (player.id, x, y, z, score);
 		//广播
 		ProtocolBytes protocolRet = new ProtocolBytes();
-		protocolRet.AddString ("UpdateInfo");
+		protocolRet.AddString ("SyncPlayerState");
 		protocolRet.AddString (player.id);
-		protocolRet.AddFloat (x);
-		protocolRet.AddFloat (y);
-		protocolRet.AddFloat (z);
-		protocolRet.AddInt (score);
-		ServNet.instance.Broadcast (protocolRet);
+		protocolRet.AddFloat (pos_x);
+		protocolRet.AddFloat (pos_y);
+		protocolRet.AddFloat (pos_z);
+        protocolRet.AddFloat(rot_x);
+        protocolRet.AddFloat(rot_y);
+        protocolRet.AddFloat(rot_z);
+        protocolRet.AddFloat(vel_x);
+        protocolRet.AddFloat(vel_y);
+        protocolRet.AddFloat(vel_z);
+
+        ServNet.instance.Broadcast (protocolRet);
 	}
 }
