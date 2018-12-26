@@ -19,6 +19,7 @@ public class GamePlayController : MonoBehaviour
             if (player.id != GameMgr.instance.local_player_ID)
             {
                 player_obj.GetComponent<PlayerController>().ctrlType = CtrlType.net;//网络同步
+                player_obj.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;//这里暂时不计入对网络玩家的碰撞
                 m_playerControllerList.Add(player.id, player_obj.GetComponent<PlayerController>());//加入的是引用，而不会新建PlayerController
             }
             Count++;
@@ -51,7 +52,7 @@ public class GamePlayController : MonoBehaviour
         float vel_y = protocol.GetFloat(start, ref start);
         float vel_z = protocol.GetFloat(start, ref start);
 
-        //同步位置、速度、转向
+        //同步位置、转向
         Vector3 _position = new Vector3(pos_x, pos_y, pos_z);
         Vector3 _rotation = new Vector3(rot_x, rot_y, rot_z);
         Vector3 _velocity = new Vector3(vel_x, vel_y, vel_z);
@@ -74,7 +75,7 @@ public class GamePlayController : MonoBehaviour
         //插值：收到新状态包后将根据其运动方向和速度，根据上一次的同步时延计算当前的新状态。
         pc.m_syncPlayerState.position = _position + _velocity * pc.syncDelta;
         pc.m_syncPlayerState.rotation = _rotation;
-        pc.m_syncPlayerState.velocity = _velocity;//速度也可以根据上一次的速度预先估计，不过暂时先不预测了
+        //pc.m_syncPlayerState.velocity = _velocity;//速度也可以根据上一次的速度预先估计，不过暂时先不预测了
 
         //刚体速度状态在这里直接设置会出现跳变的速度
         //pc.GetComponent<Rigidbody>().velocity = _velocity;

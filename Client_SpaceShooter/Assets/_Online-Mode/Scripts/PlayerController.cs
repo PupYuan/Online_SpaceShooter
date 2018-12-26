@@ -41,6 +41,10 @@ public class PlayerController : MonoBehaviour
     [HideInInspector]
     public float syncDelta = 1;
     public float syncFrequency = 5.0f;//默认为5HZ
+
+    //网络驱动的位移速度
+    private Vector3 velocity = Vector3.zero;
+
     void Update()
     {
         //本地玩家根据Input：键盘输入、鼠标输入来驱动
@@ -52,14 +56,15 @@ public class PlayerController : MonoBehaviour
         else if (ctrlType == CtrlType.net)
         {
             //位置信息在这里修正
-            transform.position = Vector3.Lerp(transform.position, m_syncPlayerState.position, syncDelta);
+            transform.position = Vector3.SmoothDamp(transform.position, m_syncPlayerState.position, ref velocity, syncDelta);
+            //transform.position = Vector3.Lerp(transform.position, m_syncPlayerState.position, syncDelta);
             transform.rotation = Quaternion.Lerp(Quaternion.Euler(transform.eulerAngles),
                                               Quaternion.Euler(m_syncPlayerState.rotation), syncDelta);
             //客户端不使用速度进行模拟
-            GetComponent<Rigidbody>().velocity = Vector3.Lerp(GetComponent<Rigidbody>().velocity, m_syncPlayerState.velocity, syncDelta);
+            //GetComponent<Rigidbody>().velocity = Vector3.Lerp(GetComponent<Rigidbody>().velocity, m_syncPlayerState.velocity, syncDelta);
         }
     }
-    //检测是否可以开火不放在Fire函数中，这样可以减少无效的函数调用，增加程序效率。
+    //检测开火不放在Fire函数中，这样可以减少无效的函数调用，增加程序效率。
     public void Fire()
     {
         nextFire = Time.time + fireRate;

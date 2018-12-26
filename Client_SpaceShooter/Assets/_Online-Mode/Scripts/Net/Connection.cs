@@ -34,6 +34,10 @@ public class Connection
         Connected,
     };
     public Status status = Status.None;
+    //统计发送数据量的速率，按每秒计算
+    float Timer = float.MinValue;
+    int packetSizePerSecond = 0;
+    
 
 
     //连接服务端
@@ -138,6 +142,7 @@ public class Connection
 
         byte[] sendbuff = length.Concat(b).ToArray();
         socket.Send(sendbuff);
+        packetSizePerSecond += sendbuff.Length;
         //Debug.Log("发送消息 " + protocol.GetDesc());
         return true;
     }
@@ -160,6 +165,16 @@ public class Connection
 
     public void Update()
     {
+        if(Time.time - Timer >= 1f)
+        {
+            Debug.Log("UpStream rate :" + packetSizePerSecond);
+            if (CanvasMgr.instance)
+            {
+                CanvasMgr.instance.UpdateUpStream(packetSizePerSecond);
+            }
+            packetSizePerSecond = 0;
+            Timer = Time.time;
+        }
         //消息
         msgDist.Update();
         //心跳
