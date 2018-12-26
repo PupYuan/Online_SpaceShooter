@@ -20,8 +20,8 @@ public class GamePlayController : MonoBehaviour
             if (player.id != GameMgr.instance.local_player_ID)
             {
                 player_obj.GetComponent<PlayerController>().ctrlType = CtrlType.net;//网络同步
-                //player_obj.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;//这里暂时不计入对网络玩家的碰撞
-                player_obj.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;//网络玩家的速度不会被限制
+                player_obj.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;//这里暂时不计入对网络玩家的碰撞
+                //player_obj.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;//网络玩家的速度不会被限制
                 m_playerControllerList.Add(player.id, player_obj.GetComponent<PlayerController>());//加入的是引用，而不会新建PlayerController
             }
             Count++;

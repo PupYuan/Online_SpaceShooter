@@ -90,39 +90,6 @@ public class PlayerController : MonoBehaviour
         }
         else if (ctrlType == CtrlType.net)
         {
-            if (position_fix == PositionFix.LinearInterpolation)
-            {
-                //当处于平滑状态的时候
-                if (smoothTick > 0)
-                {
-                    transform.position = startPosition + (forcastPosition - startPosition) * (1 - smoothTick / syncDelta);
-                    smoothTick -= Time.deltaTime;
-                }
-                else if (!hasSetVelocity)//设置一次速度
-                {
-                    hasSetVelocity = true;
-                    GetComponent<Rigidbody>().velocity = _originVeclocity;//一直保持该速度，遇到碰撞如何处理
-                }
-                    
-            }
-            else if(position_fix == PositionFix.CubicInterpolation)
-            {
-                //当处于平滑状态的时候
-                if (smoothTick > 0)
-                {
-                    float dt = (1 - smoothTick / syncDelta);
-                    Vector3 cur_position = new Vector3();//三次样条插值的位置
-                    cur_position.x = A * dt * dt * dt + B * dt * dt + C * dt + D;
-                    cur_position.z = E * dt * dt * dt + F * dt * dt + G * dt + H;
-                    transform.position = cur_position;
-                    smoothTick -= Time.deltaTime;
-                }
-                else if (!hasSetVelocity)//设置一次速度
-                {
-                    hasSetVelocity = true;
-                    GetComponent<Rigidbody>().velocity = _originVeclocity;//一直保持该速度，遇到碰撞如何处理
-                }
-            }
             ////位置信息在这里修正
             //transform.position = Vector3.SmoothDamp(transform.position, m_syncPlayerState.position, ref velocity, syncDelta);
             ////transform.position = Vector3.Lerp(transform.position, m_syncPlayerState.position, syncDelta);
@@ -183,6 +150,51 @@ public class PlayerController : MonoBehaviour
                 }
             }
         }
+        else if(ctrlType == CtrlType.net)
+        {
+            if (position_fix == PositionFix.LinearInterpolation)
+            {
+                //当处于平滑状态的时候
+                if (smoothTick > 0)
+                {
+                    transform.position = startPosition + (forcastPosition - startPosition) * (1 - smoothTick / syncDelta);
+                    smoothTick -= Time.deltaTime;
+                }
+                else
+                {
+                    transform.position += velocity * Time.deltaTime;
+                }
+                //else if (!hasSetVelocity)//设置一次速度
+                //{
+                //    hasSetVelocity = true;
+                //    //GetComponent<Rigidbody>().velocity = _originVeclocity;
+                //}
+
+            }
+            else if (position_fix == PositionFix.CubicInterpolation)
+            {
+                //当处于平滑状态的时候
+                if (smoothTick > 0)
+                {
+                    float dt = (1 - smoothTick / syncDelta);
+                    Vector3 cur_position = new Vector3();//三次样条插值的位置
+                    cur_position.x = A * dt * dt * dt + B * dt * dt + C * dt + D;
+                    cur_position.z = E * dt * dt * dt + F * dt * dt + G * dt + H;
+                    transform.position = cur_position;
+                    smoothTick -= Time.deltaTime;
+                }
+                else
+                {
+                    transform.position += velocity*Time.deltaTime;
+                }
+
+                //else if (!hasSetVelocity)//设置一次速度
+                //{
+                //    hasSetVelocity = true;
+                //    //GetComponent<Rigidbody>().velocity = _originVeclocity;
+                //}
+            }
+        }
     }
 
     public void SendPlayerState()
@@ -220,9 +232,6 @@ public class PlayerController : MonoBehaviour
             //修正位置
             transform.position = recv_state.position;
             transform.eulerAngles = recv_state.rotation;
-
-            //先用物理系统
-            GetComponent<Rigidbody>().velocity = recv_state.velocity;
         }
         else if(position_fix == PositionFix.LinearInterpolation)
         {
@@ -232,10 +241,11 @@ public class PlayerController : MonoBehaviour
 
             forcastPosition = recv_state.position + recv_state.velocity * syncDelta;
             startPosition = transform.position;
-            //先用物理系统
-            GetComponent<Rigidbody>().velocity = recv_state.velocity;
+
+            velocity = recv_state.velocity;
+
             _originVeclocity = recv_state.velocity;
-            hasSetVelocity = false;
+            //hasSetVelocity = false;
         }
         else if (position_fix == PositionFix.CubicInterpolation)
         {
@@ -255,10 +265,13 @@ public class PlayerController : MonoBehaviour
             F = 3 * pos3.z - 6 * pos2.z + 3 * pos1.z;
             G = 3 * pos2.z - 3 * pos1.z;
             H = pos1.z;
+
+            velocity = recv_state.velocity; 
+
             _originVeclocity = recv_state.velocity;
             //清空物理速度
-            GetComponent<Rigidbody>().velocity = Vector3.zero;
-            hasSetVelocity = false;
+            //GetComponent<Rigidbody>().velocity = Vector3.zero;
+            //hasSetVelocity = false;
         }
     }
 }
