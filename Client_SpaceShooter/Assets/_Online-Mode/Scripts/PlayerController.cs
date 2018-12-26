@@ -13,6 +13,11 @@ public enum CtrlType
     computer,
     net,
 }
+public enum SendStrategy
+{
+    timeInterval,
+    deadReckoning
+}
 // TODO：要同步的变换信息
 public struct SyncPlayerState
 {
@@ -20,30 +25,38 @@ public struct SyncPlayerState
     public Vector3 rotation;
     public bool isStatic;//若静止则可以省略velocity，即节省24字节。
     public Vector3 velocity;//赋值给刚体的velocity
+    public float lastSyncTime;
 }
 
 public class PlayerController : MonoBehaviour
 {
-    public SyncPlayerState m_syncPlayerState;//根据同步过来的状态插值得到的新状态，影子跟随算法中的“影子”
+    public SendStrategy send_strategy = SendStrategy.deadReckoning;
+    public SyncPlayerState lastState;//根据同步过来的状态插值得到的新状态，影子跟随算法中的“影子”
     public CtrlType ctrlType = CtrlType.player;
     public float speed;
     public float tilt;
     public Done_Boundary boundary;
-
     public GameObject shot;
     public Transform shotSpawn;
     public float fireRate;
-    private float nextFire;
     //上次的同步时间
     [HideInInspector]
-    public float lastSyncTime = float.MinValue;
     public float lastSendTime = float.MinValue;
     [HideInInspector]
     public float syncDelta = 1;
     public float syncFrequency = 5.0f;//默认为5HZ
-
+    public float deadReckoningThreshold = 1f;//位置差向量的模
+    //上次发送的状态                                         
+    private Vector3 drPostion = new Vector3(0, 0, 0);
     //网络驱动的位移速度
     private Vector3 velocity = Vector3.zero;
+    private float nextFire;
+
+    private void Start()
+    {
+        lastState.lastSyncTime = float.MinValue;
+        SendPlayerState();
+    }
 
     void Update()
     {
@@ -55,11 +68,11 @@ public class PlayerController : MonoBehaviour
         }
         else if (ctrlType == CtrlType.net)
         {
-            //位置信息在这里修正
-            transform.position = Vector3.SmoothDamp(transform.position, m_syncPlayerState.position, ref velocity, syncDelta);
-            //transform.position = Vector3.Lerp(transform.position, m_syncPlayerState.position, syncDelta);
-            transform.rotation = Quaternion.Lerp(Quaternion.Euler(transform.eulerAngles),
-                                              Quaternion.Euler(m_syncPlayerState.rotation), syncDelta);
+            ////位置信息在这里修正
+            //transform.position = Vector3.SmoothDamp(transform.position, m_syncPlayerState.position, ref velocity, syncDelta);
+            ////transform.position = Vector3.Lerp(transform.position, m_syncPlayerState.position, syncDelta);
+            //transform.rotation = Quaternion.Lerp(Quaternion.Euler(transform.eulerAngles),
+            //                                  Quaternion.Euler(m_syncPlayerState.rotation), syncDelta);
             //客户端不使用速度进行模拟
             //GetComponent<Rigidbody>().velocity = Vector3.Lerp(GetComponent<Rigidbody>().velocity, m_syncPlayerState.velocity, syncDelta);
         }
@@ -94,10 +107,25 @@ public class PlayerController : MonoBehaviour
 
         if (ctrlType == CtrlType.player)
         {
-            //每隔0.2秒同步一次，仅仅发送控制类型为玩家的状态信息
-            if(Time.time - lastSendTime >= 1.0/syncFrequency){
-                lastSendTime = Time.time;
-                SendPlayerState();
+            if(send_strategy == SendStrategy.timeInterval)
+            {
+                //平均295 bps
+                //每隔0.2秒同步一次，仅仅发送控制类型为玩家的状态信息
+                if (Time.time - lastSendTime >= 1.0 / syncFrequency)
+                {
+                    lastSendTime = Time.time;
+                    SendPlayerState();
+                }
+            }
+            else if(send_strategy == SendStrategy.deadReckoning)
+            {
+
+                //航位推算，仅仅当航位推算的位置与上次发送的位置差距大于阈值时才发送
+                drPostion = lastState.position + lastState.velocity * (Time.time - lastState.lastSyncTime);
+                if ((drPostion - transform.position).sqrMagnitude >= deadReckoningThreshold)
+                {
+                    SendPlayerState();
+                }
             }
         }
     }
@@ -110,6 +138,13 @@ public class PlayerController : MonoBehaviour
         Vector3 pos = transform.position;
         Vector3 rot = transform.eulerAngles;
         Vector3 vel = GetComponent<Rigidbody>().velocity;
+
+        //插值：发送方也保留一份发送的状态
+        lastState.position = pos;
+        lastState.rotation = rot;
+        lastState.velocity = vel;
+        lastState.lastSyncTime = Time.time;
+
         proto.AddFloat(pos.x);
         proto.AddFloat(pos.y);
         proto.AddFloat(pos.z);
