@@ -34,7 +34,8 @@ public enum SendStrategy
 public enum PositionFix
 {
     DirectSetPosition,
-    LinearInterpolation
+    LinearInterpolation,
+    CubicInterpolation
 }
 
 public class PlayerController : MonoBehaviour
@@ -60,7 +61,8 @@ public class PlayerController : MonoBehaviour
     //网络驱动的位移速度
     private Vector3 velocity = Vector3.zero;
     private float nextFire;
-    //采用插值平滑修正位置时所需的参数
+
+    //采用线性插值平滑修正位置时所需的参数
     Vector3 forcastPosition = new Vector3(0, 0, 0);
     Vector3 startPosition = new Vector3(0, 0, 0);
     [HideInInspector]
@@ -68,6 +70,8 @@ public class PlayerController : MonoBehaviour
     float smoothTick = float.MinValue;//用于平滑状态的计数器
     Vector3 _originVeclocity;//用于记录进入平滑状态前的速度
     bool hasSetVelocity = false;//只设置一次速度
+    //采用立方体插值平滑修正位置时所需的额外参数（相较于线性插值）
+    float A, B, C, D, E, F, G, H;
 
 
     private void Start()
@@ -91,8 +95,6 @@ public class PlayerController : MonoBehaviour
                 //当处于平滑状态的时候
                 if (smoothTick > 0)
                 {
-                    //清空物理速度
-                    GetComponent<Rigidbody>().velocity = Vector3.zero;
                     transform.position = startPosition + (forcastPosition - startPosition) * (1 - smoothTick / syncDelta);
                     smoothTick -= Time.deltaTime;
                 }
@@ -102,6 +104,24 @@ public class PlayerController : MonoBehaviour
                     GetComponent<Rigidbody>().velocity = _originVeclocity;//一直保持该速度，遇到碰撞如何处理
                 }
                     
+            }
+            else if(position_fix == PositionFix.CubicInterpolation)
+            {
+                //当处于平滑状态的时候
+                if (smoothTick > 0)
+                {
+                    float dt = (1 - smoothTick / syncDelta);
+                    Vector3 cur_position = new Vector3();//三次样条插值的位置
+                    cur_position.x = A * dt * dt * dt + B * dt * dt + C * dt + D;
+                    cur_position.z = E * dt * dt * dt + F * dt * dt + G * dt + H;
+                    transform.position = cur_position;
+                    smoothTick -= Time.deltaTime;
+                }
+                else if (!hasSetVelocity)//设置一次速度
+                {
+                    hasSetVelocity = true;
+                    GetComponent<Rigidbody>().velocity = _originVeclocity;//一直保持该速度，遇到碰撞如何处理
+                }
             }
             ////位置信息在这里修正
             //transform.position = Vector3.SmoothDamp(transform.position, m_syncPlayerState.position, ref velocity, syncDelta);
@@ -208,12 +228,36 @@ public class PlayerController : MonoBehaviour
         {
             syncDelta = Time.time - lastState.lastSyncTime;
             lastState.lastSyncTime = Time.time;
+            smoothTick = syncDelta;
+
             forcastPosition = recv_state.position + recv_state.velocity * syncDelta;
             startPosition = transform.position;
-            smoothTick = syncDelta;
             //先用物理系统
             GetComponent<Rigidbody>().velocity = recv_state.velocity;
             _originVeclocity = recv_state.velocity;
+            hasSetVelocity = false;
+        }
+        else if (position_fix == PositionFix.CubicInterpolation)
+        {
+            syncDelta = Time.time - lastState.lastSyncTime;
+            lastState.lastSyncTime = Time.time;
+            smoothTick = syncDelta;
+
+            Vector3 pos1 = transform.position;
+            Vector3 pos4 = recv_state.position + recv_state.velocity * syncDelta;//这里用线性的速度预测
+            Vector3 pos2 = pos1 + GetComponent<Rigidbody>().velocity * 0.1f;
+            Vector3 pos3 = pos4 - recv_state.velocity* 0.1f;
+            A = pos4.x - 3 * pos3.x + 3 * pos2.x - pos1.x;
+            B = 3 * pos3.x - 6 * pos2.x + 3 * pos1.x;
+            C = 3 * pos2.x - 3 * pos1.x;
+            D = pos1.x;
+            E = pos4.z - 3 * pos3.z + 3 * pos2.z - pos1.z;
+            F = 3 * pos3.z - 6 * pos2.z + 3 * pos1.z;
+            G = 3 * pos2.z - 3 * pos1.z;
+            H = pos1.z;
+            _originVeclocity = recv_state.velocity;
+            //清空物理速度
+            GetComponent<Rigidbody>().velocity = Vector3.zero;
             hasSetVelocity = false;
         }
     }
