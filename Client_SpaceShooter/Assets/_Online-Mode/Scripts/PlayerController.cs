@@ -13,11 +13,7 @@ public enum CtrlType
     computer,
     net,
 }
-public enum SendStrategy
-{
-    timeInterval,
-    deadReckoning
-}
+
 // TODO：要同步的变换信息
 public struct SyncPlayerState
 {
@@ -28,9 +24,24 @@ public struct SyncPlayerState
     public float lastSyncTime;
 }
 
+public enum SendStrategy
+{
+    timeInterval,
+    deadReckoning
+}
+
+//位置修正方法 
+public enum PositionFix
+{
+    DirectSetPosition,
+    LinearInterpolation
+}
+
 public class PlayerController : MonoBehaviour
 {
     public SendStrategy send_strategy = SendStrategy.deadReckoning;
+    public PositionFix position_fix = PositionFix.DirectSetPosition;
+
     public SyncPlayerState lastState;//根据同步过来的状态插值得到的新状态，影子跟随算法中的“影子”
     public CtrlType ctrlType = CtrlType.player;
     public float speed;
@@ -39,18 +50,25 @@ public class PlayerController : MonoBehaviour
     public GameObject shot;
     public Transform shotSpawn;
     public float fireRate;
-    //上次的同步时间
+    //上次发起同步的时间
     [HideInInspector]
     public float lastSendTime = float.MinValue;
-    [HideInInspector]
-    public float syncDelta = 1;
     public float syncFrequency = 5.0f;//默认为5HZ
     public float deadReckoningThreshold = 1f;//位置差向量的模
-    //上次发送的状态                                         
+    //航位预测的位置                                       
     private Vector3 drPostion = new Vector3(0, 0, 0);
     //网络驱动的位移速度
     private Vector3 velocity = Vector3.zero;
     private float nextFire;
+    //采用插值平滑修正位置时所需的参数
+    Vector3 forcastPosition = new Vector3(0, 0, 0);
+    Vector3 startPosition = new Vector3(0, 0, 0);
+    [HideInInspector]
+    public float syncDelta = 1;
+    float smoothTick = float.MinValue;//用于平滑状态的计数器
+    Vector3 _originVeclocity;//用于记录进入平滑状态前的速度
+    bool hasSetVelocity = false;//只设置一次速度
+
 
     private void Start()
     {
@@ -68,6 +86,23 @@ public class PlayerController : MonoBehaviour
         }
         else if (ctrlType == CtrlType.net)
         {
+            if (position_fix == PositionFix.LinearInterpolation)
+            {
+                //当处于平滑状态的时候
+                if (smoothTick > 0)
+                {
+                    //清空物理速度
+                    GetComponent<Rigidbody>().velocity = Vector3.zero;
+                    transform.position = startPosition + (forcastPosition - startPosition) * (1 - smoothTick / syncDelta);
+                    smoothTick -= Time.deltaTime;
+                }
+                else if (!hasSetVelocity)//设置一次速度
+                {
+                    hasSetVelocity = true;
+                    GetComponent<Rigidbody>().velocity = _originVeclocity;//一直保持该速度，遇到碰撞如何处理
+                }
+                    
+            }
             ////位置信息在这里修正
             //transform.position = Vector3.SmoothDamp(transform.position, m_syncPlayerState.position, ref velocity, syncDelta);
             ////transform.position = Vector3.Lerp(transform.position, m_syncPlayerState.position, syncDelta);
@@ -156,5 +191,30 @@ public class PlayerController : MonoBehaviour
         proto.AddFloat(vel.z);
 
         NetMgr.srvConn.Send(proto);
+    }
+
+    public void RecvPlayerState(SyncPlayerState recv_state)
+    {
+        if (position_fix == PositionFix.DirectSetPosition)
+        {
+            //修正位置
+            transform.position = recv_state.position;
+            transform.eulerAngles = recv_state.rotation;
+
+            //先用物理系统
+            GetComponent<Rigidbody>().velocity = recv_state.velocity;
+        }
+        else if(position_fix == PositionFix.LinearInterpolation)
+        {
+            syncDelta = Time.time - lastState.lastSyncTime;
+            lastState.lastSyncTime = Time.time;
+            forcastPosition = recv_state.position + recv_state.velocity * syncDelta;
+            startPosition = transform.position;
+            smoothTick = syncDelta;
+            //先用物理系统
+            GetComponent<Rigidbody>().velocity = recv_state.velocity;
+            _originVeclocity = recv_state.velocity;
+            hasSetVelocity = false;
+        }
     }
 }

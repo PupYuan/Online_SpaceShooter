@@ -6,12 +6,7 @@ using UnityEngine;
 //SpaceShooter的游戏逻辑包括：初始化玩家
 public class GamePlayController : MonoBehaviour
 {
-    //位置修正方法 
-    public enum PositionFix
-    {
-        DirectSetPosition
-    }
-    public PositionFix position_fix = PositionFix.DirectSetPosition;
+
     public GameObject[] PlayerPrefab;
     //通过id来更新
     private Dictionary<string, PlayerController> m_playerControllerList = new Dictionary<string, PlayerController>();
@@ -75,33 +70,38 @@ public class GamePlayController : MonoBehaviour
         if (player_id == GameMgr.instance.local_player_ID)//本地玩家的同步信息省略
             return;
 
+        SyncPlayerState recv_state = new SyncPlayerState();
+        recv_state.position = _position;
+        recv_state.rotation = _rotation;
+        recv_state.velocity = _velocity;
+
+        pc.RecvPlayerState(recv_state);
         //更新玩家实体的同步信息
-        pc.syncDelta = Time.time - pc.lastState.lastSyncTime;
-        pc.lastState.lastSyncTime = Time.time;
+        //pc.syncDelta = Time.time - pc.lastState.lastSyncTime;
 
-        if(position_fix == PositionFix.DirectSetPosition)
-        {
-            //修正位置
-            pc.transform.position = _position;
-            pc.transform.eulerAngles = _rotation;
+        //if(position_fix == PositionFix.DirectSetPosition)
+        //{
+        //    //修正位置
+        //    pc.transform.position = _position;
+        //    pc.transform.eulerAngles = _rotation;
 
-            //插值：收到新状态包后将根据其运动方向和速度，根据上一次的同步时延计算当前的新状态。
-            pc.lastState.position = _position;
-            pc.lastState.rotation = _rotation;
-            pc.lastState.velocity = _velocity;
-            //先用物理系统
-            pc.GetComponent<Rigidbody>().velocity = _velocity;
-        }
-        else
-        {
-            //插值：收到新状态包后将根据其运动方向和速度，根据上一次的同步时延计算当前的新状态。
-            pc.lastState.position = _position + _velocity * pc.syncDelta;
-            pc.lastState.rotation = _rotation;
-            //pc.m_syncPlayerState.velocity = _velocity;
+        //    //插值：收到新状态包后将根据其运动方向和速度，根据上一次的同步时延计算当前的新状态。
+        //    pc.lastState.position = _position;
+        //    pc.lastState.rotation = _rotation;
+        //    pc.lastState.velocity = _velocity;
+        //    //先用物理系统
+        //    pc.GetComponent<Rigidbody>().velocity = _velocity;
+        //}
+        //else
+        //{
+        //    //插值：收到新状态包后将根据其运动方向和速度，根据上一次的同步时延计算当前的新状态。
+        //    pc.lastState.position = _position + _velocity * pc.syncDelta;
+        //    pc.lastState.rotation = _rotation;
+        //    //pc.m_syncPlayerState.velocity = _velocity;
 
-            //刚体速度状态在这里直接设置会出现跳变的速度
-            pc.GetComponent<Rigidbody>().velocity = _velocity;
-        }
+        //    //刚体速度状态在这里直接设置会出现跳变的速度
+        //    pc.GetComponent<Rigidbody>().velocity = _velocity;
+        //}
         
     }
 }
