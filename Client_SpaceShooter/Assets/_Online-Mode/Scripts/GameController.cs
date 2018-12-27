@@ -4,6 +4,7 @@ using System.Collections;
 
 public class GameController : MonoBehaviour
 {
+    public static GameController instance;
     //用确定的随机数种子
     private System.Random random;
 
@@ -21,8 +22,13 @@ public class GameController : MonoBehaviour
 	private bool gameOver;
 	private bool restart;
 	private int score;
-	
-	void Start ()
+    public int playerLeft = 1;//剩余玩家数量
+
+    private void Awake()
+    {
+        instance = this;
+    }
+    void Start ()
 	{
         random = new System.Random(1000);
         gameOver = false;
@@ -92,4 +98,11 @@ public class GameController : MonoBehaviour
 		gameOverText.text = "Game Over!";
 		gameOver = true;
 	}
+
+    public void PlayerDie()
+    {
+        playerLeft--;
+        if (playerLeft <= 0)
+            GameOver();
+    }
 }

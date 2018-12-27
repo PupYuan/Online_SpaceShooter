@@ -97,4 +97,19 @@ public partial class HandlePlayerMsg
 
         ServNet.instance.Broadcast(protocolRet);
     }
+
+    //更新信息
+    public void MsgSyncPlayerDie(Player player, ProtocolBase protoBase)
+    {
+        //获取数值
+        int start = 0;
+        ProtocolBytes protocol = (ProtocolBytes)protoBase;
+        string protoName = protocol.GetString(start, ref start);
+        //广播
+        ProtocolBytes protocolRet = new ProtocolBytes();
+        protocolRet.AddString("SyncPlayerDie");
+        protocolRet.AddString(player.id);
+
+        ServNet.instance.Broadcast(protocolRet);
+    }
 }

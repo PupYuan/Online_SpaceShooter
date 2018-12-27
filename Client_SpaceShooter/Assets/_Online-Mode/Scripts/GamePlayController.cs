@@ -65,6 +65,28 @@ public class GamePlayController : MonoBehaviour
             return;
         pc.RecvFire(position, rotation);
     }
+
+    public void SyncPlayerDie(ProtocolBase proto)
+    {
+        int start = 0;
+        ProtocolBytes protocol = (ProtocolBytes)proto;
+        string protoName = protocol.GetString(start, ref start);
+        Debug.Log("SyncPlayerDie ");
+        if (protoName != "SyncPlayerDie")
+            return;
+        string player_id = protocol.GetString(start, ref start);
+        //根据id去更新PlayerController的信息
+        if (!m_playerControllerList.ContainsKey(player_id))
+        {
+            Debug.Log("SyncPlayerDie pc == null ");
+            return;
+        }
+        PlayerController pc = m_playerControllerList[player_id];
+        if (player_id == GameMgr.instance.local_player_ID)//本地玩家的同步信息省略
+            return;
+        pc.RecvDie();
+    }
+
     //同步玩家信息，使用影子跟随算法
     //该函数调用大约以每秒5次的频率调用，在这里看看是否有别的优化方案
     public void SyncPlayerState(ProtocolBase proto)

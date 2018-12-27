@@ -108,11 +108,16 @@ public class PlayerController : MonoBehaviour
         GetComponent<AudioSource>().Play();
     }
 
-    public void RecvFire(Vector3 _position,Vector3 _rotation)
+    //死亡，并且同步信息到其他玩家实体上
+    public void Die()
     {
-        Instantiate(shot, _position, Quaternion.EulerAngles(_rotation));
-        GetComponent<AudioSource>().Play();
+        ProtocolBytes proto = new ProtocolBytes();
+        proto.AddString("SyncPlayerDie");
+
+        NetMgr.srvConn.Send(proto);
+        RecvDie();
     }
+
     void FixedUpdate()
     {
         //两种方式改变Rigidbody的velocity，一种是Input.GetAxis，另外一种是网络同步过来的玩家信息
@@ -294,5 +299,17 @@ public class PlayerController : MonoBehaviour
             //GetComponent<Rigidbody>().velocity = Vector3.zero;
             //hasSetVelocity = false;
         }
+    }
+
+    public void RecvFire(Vector3 _position, Vector3 _rotation)
+    {
+        Instantiate(shot, _position, Quaternion.EulerAngles(_rotation));
+        GetComponent<AudioSource>().Play();
+    }
+
+    public void RecvDie()
+    {
+        gameObject.SetActive(false);
+        GameController.instance.PlayerDie();
     }
 }
