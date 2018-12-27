@@ -104,7 +104,8 @@ public class PlayerController : MonoBehaviour
     {
         SendPlayerFire();
         nextFire = Time.time + fireRate;
-        Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
+        GameObject bulletObj = Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
+        bulletObj.GetComponent<Bullet>().attackerID = GameMgr.instance.local_player_ID;
         GetComponent<AudioSource>().Play();
     }
 

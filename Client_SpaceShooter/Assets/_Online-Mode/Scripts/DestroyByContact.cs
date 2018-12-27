@@ -3,32 +3,39 @@ using System.Collections;
 
 public class DestroyByContact : MonoBehaviour
 {
-	public GameObject explosion;
-	public GameObject playerExplosion;
-	public int scoreValue;
-	private GameController gameController;
+    public GameObject explosion;
+    public GameObject playerExplosion;
+    public int scoreValue;
+    private GameController gameController;
 
-	void Start ()
-	{
-		GameObject gameControllerObject = GameObject.FindGameObjectWithTag ("GameController");
-		if (gameControllerObject != null)
-		{
-			gameController = gameControllerObject.GetComponent <GameController>();
-		}
-		if (gameController == null)
-		{
-			Debug.Log ("Cannot find 'GameController' script");
-		}
-	}
+    void Start()
+    {
+        GameObject gameControllerObject = GameObject.FindGameObjectWithTag("GameController");
+        if (gameControllerObject != null)
+        {
+            gameController = gameControllerObject.GetComponent<GameController>();
+        }
+        if (gameController == null)
+        {
+            Debug.Log("Cannot find 'GameController' script");
+        }
+    }
 
-	void OnTriggerEnter (Collider other)
-	{
-		if (other.tag == "Boundary" || other.tag == "Enemy")
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Boundary" || other.tag == "Enemy" )
 		{
-			return;
-		}
+            return;
+        }
+        //判断是否是本地玩家的子弹，否则没有击中判断权利
+        Bullet bullet = other.GetComponent<Bullet>();
+        if (bullet)
+        {
+            if (bullet.attackerID != GameMgr.instance.local_player_ID)
+                return;
+        }
 
-		if (explosion != null)
+        if (explosion != null)
 		{
 			Instantiate(explosion, transform.position, transform.rotation);
 		}
@@ -45,7 +52,6 @@ public class DestroyByContact : MonoBehaviour
             return;
 			//gameController.GameOver();两个玩家都死亡才判定结束
 		}
-		
 		gameController.AddScore(scoreValue);
 		Destroy (other.gameObject);
 		Destroy (gameObject);
