@@ -102,8 +102,15 @@ public class PlayerController : MonoBehaviour
     //检测开火不放在Fire函数中，这样可以减少无效的函数调用，增加程序效率。
     public void Fire()
     {
+        SendPlayerFire();
         nextFire = Time.time + fireRate;
         Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
+        GetComponent<AudioSource>().Play();
+    }
+
+    public void RecvFire(Vector3 _position,Vector3 _rotation)
+    {
+        Instantiate(shot, _position, Quaternion.EulerAngles(_rotation));
         GetComponent<AudioSource>().Play();
     }
     void FixedUpdate()
@@ -195,6 +202,20 @@ public class PlayerController : MonoBehaviour
                 //}
             }
         }
+    }
+
+    public void SendPlayerFire()
+    {
+        ProtocolBytes proto = new ProtocolBytes();
+        proto.AddString("SyncPlayerFire");
+        proto.AddFloat(shotSpawn.position.x);
+        proto.AddFloat(shotSpawn.position.y);
+        proto.AddFloat(shotSpawn.position.z);
+        proto.AddFloat(shotSpawn.rotation.x);
+        proto.AddFloat(shotSpawn.rotation.y);
+        proto.AddFloat(shotSpawn.rotation.z);
+
+        NetMgr.srvConn.Send(proto);
     }
 
     public void SendPlayerState()

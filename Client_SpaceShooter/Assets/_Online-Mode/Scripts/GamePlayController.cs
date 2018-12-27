@@ -27,12 +27,44 @@ public class GamePlayController : MonoBehaviour
             Count++;
         }
         NetMgr.srvConn.msgDist.AddListener("SyncPlayerState", SyncPlayerState);
+        NetMgr.srvConn.msgDist.AddListener("SyncPlayerFire", SyncPlayerFire);
     }
     private void OnDestroy()
     {
         NetMgr.srvConn.msgDist.DelListener("SyncPlayerState", SyncPlayerState);
+        NetMgr.srvConn.msgDist.DelListener("SyncPlayerFire", SyncPlayerFire);
     }
+    public void SyncPlayerFire(ProtocolBase proto)
+    {
+        int start = 0;
+        ProtocolBytes protocol = (ProtocolBytes)proto;
+        string protoName = protocol.GetString(start, ref start);
+        Debug.Log("SyncPlayerFire ");
+        if (protoName != "SyncPlayerFire")
+            return;
+        string player_id = protocol.GetString(start, ref start);
 
+        float pos_x = protocol.GetFloat(start, ref start);
+        float pos_y = protocol.GetFloat(start, ref start);
+        float pos_z = protocol.GetFloat(start, ref start);
+        float rot_x = protocol.GetFloat(start, ref start);
+        float rot_y = protocol.GetFloat(start, ref start);
+        float rot_z = protocol.GetFloat(start, ref start);
+
+        Vector3 position = new Vector3(pos_x, pos_y, pos_z);
+        Vector3 rotation = new Vector3(rot_x, rot_y, rot_z);
+
+        //根据id去更新PlayerController的信息
+        if (!m_playerControllerList.ContainsKey(player_id))
+        {
+            Debug.Log("SyncPlayerFire pc == null ");
+            return;
+        }
+        PlayerController pc = m_playerControllerList[player_id];
+        if (player_id == GameMgr.instance.local_player_ID)//本地玩家的同步信息省略
+            return;
+        pc.RecvFire(position, rotation);
+    }
     //同步玩家信息，使用影子跟随算法
     //该函数调用大约以每秒5次的频率调用，在这里看看是否有别的优化方案
     public void SyncPlayerState(ProtocolBase proto)

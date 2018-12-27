@@ -68,4 +68,33 @@ public partial class HandlePlayerMsg
 
         ServNet.instance.Broadcast (protocolRet);
 	}
+
+    //更新信息
+    public void MsgSyncPlayerFire(Player player, ProtocolBase protoBase)
+    {
+        //获取数值
+        int start = 0;
+        ProtocolBytes protocol = (ProtocolBytes)protoBase;
+        string protoName = protocol.GetString(start, ref start);
+
+        float pos_x = protocol.GetFloat(start, ref start);
+        float pos_y = protocol.GetFloat(start, ref start);
+        float pos_z = protocol.GetFloat(start, ref start);
+        float rot_x = protocol.GetFloat(start, ref start);
+        float rot_y = protocol.GetFloat(start, ref start);
+        float rot_z = protocol.GetFloat(start, ref start);
+
+        //广播
+        ProtocolBytes protocolRet = new ProtocolBytes();
+        protocolRet.AddString("SyncPlayerFire");
+        protocolRet.AddString(player.id);
+        protocolRet.AddFloat(pos_x);
+        protocolRet.AddFloat(pos_y);
+        protocolRet.AddFloat(pos_z);
+        protocolRet.AddFloat(rot_x);
+        protocolRet.AddFloat(rot_y);
+        protocolRet.AddFloat(rot_z);
+
+        ServNet.instance.Broadcast(protocolRet);
+    }
 }

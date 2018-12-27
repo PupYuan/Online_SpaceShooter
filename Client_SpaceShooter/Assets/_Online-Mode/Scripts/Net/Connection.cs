@@ -167,7 +167,7 @@ public class Connection
     {
         if(Time.time - Timer >= 1f)
         {
-            Debug.Log("UpStream rate :" + packetSizePerSecond);
+            //Debug.Log("UpStream rate :" + packetSizePerSecond);
             if (CanvasMgr.instance)
             {
                 CanvasMgr.instance.UpdateUpStream(packetSizePerSecond);
