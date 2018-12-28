@@ -33,7 +33,10 @@ public class DestroyByContact : MonoBehaviour
         if (bullet)
         {
             if (bullet.attackerID != GameMgr.instance.local_player_ID)
+            {
+                Destroy(other.gameObject);
                 return;
+            }
         }
 
 		if (other.tag == "Player")
