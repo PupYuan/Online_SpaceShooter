@@ -28,11 +28,13 @@ public class PlayerMgr : MonoBehaviour
         }
         NetMgr.srvConn.msgDist.AddListener("SyncPlayerState", SyncPlayerState);
         NetMgr.srvConn.msgDist.AddListener("SyncPlayerFire", SyncPlayerFire);
+        NetMgr.srvConn.msgDist.AddListener("SyncPlayerDie", SyncPlayerDie);
     }
     private void OnDestroy()
     {
         NetMgr.srvConn.msgDist.DelListener("SyncPlayerState", SyncPlayerState);
         NetMgr.srvConn.msgDist.DelListener("SyncPlayerFire", SyncPlayerFire);
+        NetMgr.srvConn.msgDist.DelListener("SyncPlayerDie", SyncPlayerDie);
     }
     public void SyncPlayerFire(ProtocolBase proto)
     {

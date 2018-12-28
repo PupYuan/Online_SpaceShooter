@@ -23,6 +23,7 @@ public class GameController : MonoBehaviour
 	private bool gameOver;
 	private bool restart;
 	private int score;
+    public int playerLeft = 2;//剩余玩家数量
     //用确定的随机数种子
     private System.Random random;
     private int totalHazrds = 0;//记录出现过的敌军总数
