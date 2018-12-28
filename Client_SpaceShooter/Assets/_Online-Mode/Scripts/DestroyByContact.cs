@@ -3,6 +3,7 @@ using System.Collections;
 
 public class DestroyByContact : MonoBehaviour
 {
+    public string ID;//用于同步和调用
     public GameObject explosion;
     public GameObject playerExplosion;
     public int scoreValue;
@@ -35,11 +36,6 @@ public class DestroyByContact : MonoBehaviour
                 return;
         }
 
-        if (explosion != null)
-		{
-			Instantiate(explosion, transform.position, transform.rotation);
-		}
-
 		if (other.tag == "Player")
 		{
             //只有本地玩家才会被击毁，网络控制的玩家不会被击毁，得由服务器来控制
@@ -47,13 +43,28 @@ public class DestroyByContact : MonoBehaviour
             if (pc.ctrlType != CtrlType.player)
                 return;
 			Instantiate(playerExplosion, other.transform.position, other.transform.rotation);
-            pc.Die();//包含了Destroy玩家实体的操作
-            Destroy(gameObject);
+            pc.Die();//玩家死亡需要发送协议
+            BeDestroyed();
             return;
 			//gameController.GameOver();两个玩家都死亡才判定结束
 		}
-		gameController.AddScore(scoreValue);
-		Destroy (other.gameObject);
-		Destroy (gameObject);
-	}
+
+        ProtocolBytes proto = new ProtocolBytes();
+        proto.AddString("SyncHazardDie");
+        proto.AddString(ID);
+        NetMgr.srvConn.Send(proto);
+
+        Destroy (other.gameObject);
+        GameController.instance.RemoveHazard(ID);//本地客户端需要自己移除
+    }
+    //调用销毁函数和爆炸效果
+    public void BeDestroyed()
+    {
+        if (explosion != null)
+        {
+            Instantiate(explosion, transform.position, transform.rotation);
+        }
+        gameController.AddScore(scoreValue);
+        Destroy(gameObject);
+    }
 }

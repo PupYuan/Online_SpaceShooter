@@ -4,7 +4,7 @@ using UnityEngine;
 
 //GamePlayController负责每局游戏的逻辑控制，使用NetMgr的网络接口
 //SpaceShooter的游戏逻辑包括：初始化玩家
-public class GamePlayController : MonoBehaviour
+public class PlayerMgr : MonoBehaviour
 {
 
     public GameObject[] PlayerPrefab;
