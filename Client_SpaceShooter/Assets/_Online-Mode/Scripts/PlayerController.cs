@@ -99,26 +99,6 @@ public class PlayerController : MonoBehaviour
             //GetComponent<Rigidbody>().velocity = Vector3.Lerp(GetComponent<Rigidbody>().velocity, m_syncPlayerState.velocity, syncDelta);
         }
     }
-    //检测开火不放在Fire函数中，这样可以减少无效的函数调用，增加程序效率。
-    public void Fire()
-    {
-        SendPlayerFire();
-        nextFire = Time.time + fireRate;
-        GameObject bulletObj = Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
-        bulletObj.GetComponent<Bullet>().attackerID = GameMgr.instance.local_player_ID;
-        GetComponent<AudioSource>().Play();
-    }
-
-    //死亡，并且同步信息到其他玩家实体上
-    public void Die()
-    {
-        ProtocolBytes proto = new ProtocolBytes();
-        proto.AddString("SyncPlayerDie");
-
-        NetMgr.srvConn.Send(proto);
-        RecvDie();
-    }
-
     void FixedUpdate()
     {
         //两种方式改变Rigidbody的velocity，一种是Input.GetAxis，另外一种是网络同步过来的玩家信息
@@ -142,7 +122,7 @@ public class PlayerController : MonoBehaviour
 
         if (ctrlType == CtrlType.player)
         {
-            if(send_strategy == SendStrategy.timeInterval)
+            if (send_strategy == SendStrategy.timeInterval)
             {
                 //平均295 bps
                 //每隔0.2秒同步一次，仅仅发送控制类型为玩家的状态信息
@@ -152,7 +132,7 @@ public class PlayerController : MonoBehaviour
                     SendPlayerState();
                 }
             }
-            else if(send_strategy == SendStrategy.deadReckoning)
+            else if (send_strategy == SendStrategy.deadReckoning)
             {
 
                 //航位推算，仅仅当航位推算的位置与上次发送的位置差距大于阈值时才发送
@@ -163,7 +143,7 @@ public class PlayerController : MonoBehaviour
                 }
             }
         }
-        else if(ctrlType == CtrlType.net)
+        else if (ctrlType == CtrlType.net)
         {
             if (position_fix == PositionFix.LinearInterpolation)
             {
@@ -198,7 +178,7 @@ public class PlayerController : MonoBehaviour
                 }
                 else
                 {
-                    transform.position += velocity*Time.deltaTime;
+                    transform.position += velocity * Time.deltaTime;
                 }
 
                 //else if (!hasSetVelocity)//设置一次速度
@@ -208,6 +188,25 @@ public class PlayerController : MonoBehaviour
                 //}
             }
         }
+    }
+    //检测开火不放在Fire函数中，这样可以减少无效的函数调用，增加程序效率。
+    public void Fire()
+    {
+        SendPlayerFire();
+        nextFire = Time.time + fireRate;
+        GameObject bulletObj = Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
+        bulletObj.GetComponent<Bullet>().attackerID = GameMgr.instance.local_player_ID;
+        GetComponent<AudioSource>().Play();
+    }
+
+    //死亡，并且同步信息到其他玩家实体上
+    public void Die()
+    {
+        ProtocolBytes proto = new ProtocolBytes();
+        proto.AddString("SyncPlayerDie");
+
+        NetMgr.srvConn.Send(proto);
+        RecvDie();
     }
 
     public void SendPlayerFire()

@@ -13,7 +13,6 @@ public class GameController : MonoBehaviour
 	public float spawnWait;
 	public float startWait;
 	public float waveWait;
-    public int playerLeft = 1;//剩余玩家数量
     public Dictionary<string, DestroyByContact> hazardsList = new Dictionary<string, DestroyByContact>();
 
     public GUIText scoreText;
@@ -96,19 +95,21 @@ public class GameController : MonoBehaviour
                 totalHazrds++;
                 int randIndex = random.Next(0, hazards.Length);
                 GameObject hazard = hazards[randIndex];
-                DestroyByContact hazardhandle = hazard.GetComponent<DestroyByContact>();
-                hazardhandle.ID = "hazard" + totalHazrds.ToString();
-                hazardsList.Add(hazardhandle.ID, hazardhandle);
+                
                 //GameObject hazard = hazards [Random.Range (0, hazards.Length)];
-
                 var r = random.NextDouble();
                 float randX = (float)(r * (-spawnValues.x - spawnValues.x) + spawnValues.x);
     
                 Vector3 spawnPosition = new Vector3(randX, spawnValues.y, spawnValues.z);
                 //Vector3 spawnPosition = new Vector3 (Random.Range (-spawnValues.x, spawnValues.x), spawnValues.y, spawnValues.z);
                 Quaternion spawnRotation = Quaternion.identity;
-				Instantiate (hazard, spawnPosition, spawnRotation);
-				yield return new WaitForSeconds (spawnWait);
+                GameObject hazardObj = Instantiate(hazard, spawnPosition, spawnRotation);
+
+                DestroyByContact hazardhandle = hazardObj.GetComponent<DestroyByContact>();
+                hazardhandle.ID = "hazard" + totalHazrds.ToString();
+                hazardsList.Add(hazardhandle.ID, hazardhandle);
+
+                yield return new WaitForSeconds (spawnWait);
 			}
 			yield return new WaitForSeconds (waveWait);
 			
