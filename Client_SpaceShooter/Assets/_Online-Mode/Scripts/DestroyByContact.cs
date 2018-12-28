@@ -42,7 +42,8 @@ public class DestroyByContact : MonoBehaviour
             PlayerController pc = other.GetComponent<PlayerController>();
             if (pc.ctrlType != CtrlType.player)
                 return;
-			Instantiate(playerExplosion, other.transform.position, other.transform.rotation);
+            //玩家实体的爆炸效果交由玩家实体自己生成
+			//Instantiate(playerExplosion, other.transform.position, other.transform.rotation);
             pc.Die();//玩家死亡需要发送协议
             BeDestroyed();
             return;

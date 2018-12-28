@@ -40,9 +40,9 @@ public enum PositionFix
 
 public class PlayerController : MonoBehaviour
 {
+    
     public SendStrategy send_strategy = SendStrategy.deadReckoning;
     public PositionFix position_fix = PositionFix.DirectSetPosition;
-
     public SyncPlayerState lastState;//根据同步过来的状态插值得到的新状态，影子跟随算法中的“影子”
     public CtrlType ctrlType = CtrlType.player;
     public float speed;
@@ -56,6 +56,8 @@ public class PlayerController : MonoBehaviour
     public float lastSendTime = float.MinValue;
     public float syncFrequency = 5.0f;//默认为5HZ
     public float deadReckoningThreshold = 1f;//位置差向量的模
+    public GameObject playerExplosion;
+
     //航位预测的位置                                       
     private Vector3 drPostion = new Vector3(0, 0, 0);
     //网络驱动的位移速度
@@ -310,6 +312,7 @@ public class PlayerController : MonoBehaviour
     public void RecvDie()
     {
         gameObject.SetActive(false);
+        Instantiate(playerExplosion, transform.position, transform.rotation);
         GameController.instance.PlayerDie();
     }
 }
