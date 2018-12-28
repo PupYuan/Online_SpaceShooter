@@ -45,17 +45,20 @@ public class DestroyByContact : MonoBehaviour
             //玩家实体的爆炸效果交由玩家实体自己生成
 			//Instantiate(playerExplosion, other.transform.position, other.transform.rotation);
             pc.Die();//玩家死亡需要发送协议
-            BeDestroyed();
+            SendHazardDie();
             return;
-			//gameController.GameOver();两个玩家都死亡才判定结束
 		}
-
+        SendHazardDie();
+        Destroy (other.gameObject);
+        
+    }
+    public void SendHazardDie()
+    {
         ProtocolBytes proto = new ProtocolBytes();
         proto.AddString("SyncHazardDie");
         proto.AddString(ID);
         NetMgr.srvConn.Send(proto);
 
-        Destroy (other.gameObject);
         GameController.instance.RemoveHazard(ID);//本地客户端需要自己移除
     }
     //调用销毁函数和爆炸效果
