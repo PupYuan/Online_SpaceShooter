@@ -13,7 +13,7 @@ public partial class HandleConnMsg
     //登录
     //协议参数：str用户名,str密码
     //返回协议：-1表示失败 0表示成功
-    public void MsgMatching(Conn conn, ProtocolBase protoBase)
+    public void MsgLogin(Conn conn, ProtocolBase protoBase)
     {
         //获取数值
         int start = 0;
@@ -21,10 +21,10 @@ public partial class HandleConnMsg
         string protoName = protocol.GetString(start, ref start);
         string id = protocol.GetString(start, ref start);
         string strFormat = "[收到请求匹配协议]" + conn.GetAdress();
-        Console.WriteLine(strFormat + " 用户名：" + id );
+        Console.WriteLine(strFormat + " 用户名：" + id);
         //构建返回协议
         ProtocolBytes protocolRet = new ProtocolBytes();
-        protocolRet.AddString("Matching");
+        protocolRet.AddString("Login");
         //是否已经请求匹配
         ProtocolBytes protocolLogout = new ProtocolBytes();
         protocolLogout.AddString("Logout");
@@ -35,14 +35,11 @@ public partial class HandleConnMsg
             return;
         }
         conn.player = new Player(id, conn);
-        //事件触发
-        ServNet.instance.handlePlayerEvent.OnMatching(conn.player);
         //返回
         protocolRet.AddInt(0);
         conn.Send(protocolRet);
         return;
     }
-
     //下线
     //协议参数：
     //返回协议：0-正常下线

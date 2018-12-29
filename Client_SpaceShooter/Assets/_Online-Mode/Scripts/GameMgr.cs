@@ -17,6 +17,7 @@ public class GameMgr : MonoBehaviour
             instance = this;
             DontDestroyOnLoad(this.gameObject);
         }
+        else Destroy(this.gameObject);//已有instance，清除掉这个实例
     }
 
     void Start()

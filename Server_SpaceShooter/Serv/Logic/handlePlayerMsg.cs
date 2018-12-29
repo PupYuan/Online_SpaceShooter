@@ -2,8 +2,20 @@ using System;
 
 public partial class HandlePlayerMsg
 {
-	//获取玩家列表
-	public void MsgGetList(Player player, ProtocolBase protoBase)
+    //Matching 
+    public void MsgMatching(Player player, ProtocolBase protoBase)
+    {
+        //获取数值
+        int start = 0;
+        ProtocolBytes protocol = (ProtocolBytes)protoBase;
+        string protoName = protocol.GetString(start, ref start);
+        string id = protocol.GetString(start, ref start);
+        //事件触发
+        ServNet.instance.handlePlayerEvent.OnMatching(player);
+    }
+
+    //获取玩家列表
+    public void MsgGetList(Player player, ProtocolBase protoBase)
 	{
 		Scene.instance.SendPlayerList (player);
 	}
@@ -87,4 +99,5 @@ public partial class HandlePlayerMsg
 
         ServNet.instance.Broadcast(protocolRet);
     }
+    
 }

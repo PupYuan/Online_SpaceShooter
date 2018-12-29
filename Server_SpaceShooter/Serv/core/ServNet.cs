@@ -210,7 +210,7 @@ public class ServNet
 			MethodInfo mm = handlePlayerMsg.GetType().GetMethod (methodName);
 			if (mm == null) {
 				string str = "[警告]HandleMsg没有处理玩家方法 ";
-				Console.WriteLine ("str + methodName");
+				Console.WriteLine (str + methodName);
 				return;
 			}
 			Object[] obj = new object[]{conn.player,protoBase};

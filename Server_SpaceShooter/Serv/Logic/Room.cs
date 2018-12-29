@@ -91,6 +91,7 @@ public class Room
                 p.tempData.status = PlayerTempData.Status.Fight;
 
                 protocol.AddString(p.id);
+                //Console.WriteLine("player " +p.id); 只返回了两个玩家
             }
             Broadcast(protocol);
         }

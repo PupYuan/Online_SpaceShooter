@@ -90,16 +90,6 @@ public class PlayerController : MonoBehaviour
             if (Input.GetButton("Fire1") && Time.time > nextFire)
                 Fire();
         }
-        else if (ctrlType == CtrlType.net)
-        {
-            ////位置信息在这里修正
-            //transform.position = Vector3.SmoothDamp(transform.position, m_syncPlayerState.position, ref velocity, syncDelta);
-            ////transform.position = Vector3.Lerp(transform.position, m_syncPlayerState.position, syncDelta);
-            //transform.rotation = Quaternion.Lerp(Quaternion.Euler(transform.eulerAngles),
-            //                                  Quaternion.Euler(m_syncPlayerState.rotation), syncDelta);
-            //客户端不使用速度进行模拟
-            //GetComponent<Rigidbody>().velocity = Vector3.Lerp(GetComponent<Rigidbody>().velocity, m_syncPlayerState.velocity, syncDelta);
-        }
     }
     void FixedUpdate()
     {
@@ -159,11 +149,6 @@ public class PlayerController : MonoBehaviour
                 {
                     transform.position += velocity * Time.deltaTime;
                 }
-                //else if (!hasSetVelocity)//设置一次速度
-                //{
-                //    hasSetVelocity = true;
-                //    //GetComponent<Rigidbody>().velocity = _originVeclocity;
-                //}
 
             }
             else if (position_fix == PositionFix.CubicInterpolation)
@@ -182,12 +167,6 @@ public class PlayerController : MonoBehaviour
                 {
                     transform.position += velocity * Time.deltaTime;
                 }
-
-                //else if (!hasSetVelocity)//设置一次速度
-                //{
-                //    hasSetVelocity = true;
-                //    //GetComponent<Rigidbody>().velocity = _originVeclocity;
-                //}
             }
         }
     }

@@ -132,32 +132,5 @@ public class PlayerMgr : MonoBehaviour
         recv_state.velocity = _velocity;
 
         pc.RecvPlayerState(recv_state);
-        //更新玩家实体的同步信息
-        //pc.syncDelta = Time.time - pc.lastState.lastSyncTime;
-
-        //if(position_fix == PositionFix.DirectSetPosition)
-        //{
-        //    //修正位置
-        //    pc.transform.position = _position;
-        //    pc.transform.eulerAngles = _rotation;
-
-        //    //插值：收到新状态包后将根据其运动方向和速度，根据上一次的同步时延计算当前的新状态。
-        //    pc.lastState.position = _position;
-        //    pc.lastState.rotation = _rotation;
-        //    pc.lastState.velocity = _velocity;
-        //    //先用物理系统
-        //    pc.GetComponent<Rigidbody>().velocity = _velocity;
-        //}
-        //else
-        //{
-        //    //插值：收到新状态包后将根据其运动方向和速度，根据上一次的同步时延计算当前的新状态。
-        //    pc.lastState.position = _position + _velocity * pc.syncDelta;
-        //    pc.lastState.rotation = _rotation;
-        //    //pc.m_syncPlayerState.velocity = _velocity;
-
-        //    //刚体速度状态在这里直接设置会出现跳变的速度
-        //    pc.GetComponent<Rigidbody>().velocity = _velocity;
-        //}
-        
     }
 }

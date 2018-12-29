@@ -26,7 +26,8 @@ public class MatchingPanel : MonoBehaviour
         if (protoName != "StartGame")
             return;
         int Count = protocol.GetInt(start,ref start);
-        for(int i=0;i<Count;i++){
+        GameMgr.instance.player_list.Clear();//先清空
+        for (int i=0;i<Count;i++){
             string id = protocol.GetString(start,ref start);
             PlayerTempData player = new PlayerTempData();
             player.id = id;

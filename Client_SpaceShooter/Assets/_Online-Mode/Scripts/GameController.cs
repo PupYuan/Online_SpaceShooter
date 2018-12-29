@@ -80,8 +80,10 @@ public class GameController : MonoBehaviour
 		{
 			if (Input.GetKeyDown (KeyCode.R))
 			{
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-			}
+                //退回到主菜单
+                SceneManager.LoadScene("_Menu");
+                //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            }
 		}
 	}
 	
@@ -115,7 +117,7 @@ public class GameController : MonoBehaviour
 			
 			if (gameOver)
 			{
-				restartText.text = "Press 'R' for Restart";
+				restartText.text = "Press 'R' to Exit";
 				restart = true;
 				break;
 			}
