@@ -15,12 +15,11 @@ public enum CtrlType
 }
 
 // TODO：要同步的变换信息
-public struct SyncPlayerState
+public struct MotionState
 {
     public Vector3 position;
     public Vector3 rotation;
-    public bool isStatic;//若静止则可以省略velocity，即节省24字节。
-    public Vector3 velocity;//赋值给刚体的velocity
+    public Vector3 velocity;
     public float lastSyncTime;
 }
 
@@ -43,7 +42,7 @@ public class PlayerController : MonoBehaviour
     
     public SendStrategy send_strategy = SendStrategy.deadReckoning;
     public PositionFix position_fix = PositionFix.DirectSetPosition;
-    public SyncPlayerState lastState;//根据同步过来的状态插值得到的新状态，影子跟随算法中的“影子”
+    public MotionState lastMotionState;//根据同步过来的状态插值得到的新状态，影子跟随算法中的“影子”
     public CtrlType ctrlType = CtrlType.player;
     public float speed;
     public float tilt;
@@ -78,8 +77,8 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
-        lastState.lastSyncTime = float.MinValue;
-        SendPlayerState();
+        lastMotionState.lastSyncTime = float.MinValue;
+        SendMotionState();
     }
 
     void Update()
@@ -121,17 +120,17 @@ public class PlayerController : MonoBehaviour
                 if (Time.time - lastSendTime >= 1.0 / syncFrequency)
                 {
                     lastSendTime = Time.time;
-                    SendPlayerState();
+                    SendMotionState();
                 }
             }
             else if (send_strategy == SendStrategy.deadReckoning)
             {
 
                 //航位推算，仅仅当航位推算的位置与上次发送的位置差距大于阈值时才发送
-                drPostion = lastState.position + lastState.velocity * (Time.time - lastState.lastSyncTime);
+                drPostion = lastMotionState.position + lastMotionState.velocity * (Time.time - lastMotionState.lastSyncTime);
                 if ((drPostion - transform.position).sqrMagnitude >= deadReckoningThreshold)
                 {
-                    SendPlayerState();
+                    SendMotionState();
                 }
             }
         }
@@ -144,6 +143,9 @@ public class PlayerController : MonoBehaviour
                 {
                     transform.position = startPosition + (forcastPosition - startPosition) * (1 - smoothTick / syncDelta);
                     smoothTick -= Time.deltaTime;
+                    //
+                    //transform.rotation = Quaternion.Lerp(Quaternion.Euler(transform.eulerAngles),
+                    //                          Quaternion.Euler(m_syncPlayerState.rotation), syncDelta);
                 }
                 else
                 {
@@ -204,20 +206,20 @@ public class PlayerController : MonoBehaviour
         NetMgr.srvConn.Send(proto);
     }
 
-    public void SendPlayerState()
+    public void SendMotionState()
     {
         ProtocolBytes proto = new ProtocolBytes();
-        proto.AddString("SyncPlayerState");
+        proto.AddString("SyncMotionState");
         //位置旋转
         Vector3 pos = transform.position;
         Vector3 rot = transform.eulerAngles;
         Vector3 vel = GetComponent<Rigidbody>().velocity;
 
         //插值：发送方也保留一份发送的状态
-        lastState.position = pos;
-        lastState.rotation = rot;
-        lastState.velocity = vel;
-        lastState.lastSyncTime = Time.time;
+        lastMotionState.position = pos;
+        lastMotionState.rotation = rot;
+        lastMotionState.velocity = vel;
+        lastMotionState.lastSyncTime = Time.time;
 
         proto.AddFloat(pos.x);
         proto.AddFloat(pos.y);
@@ -232,18 +234,18 @@ public class PlayerController : MonoBehaviour
         NetMgr.srvConn.Send(proto);
     }
 
-    public void RecvPlayerState(SyncPlayerState recv_state)
+    public void RecvMotionState(MotionState recv_state)
     {
         if (position_fix == PositionFix.DirectSetPosition)
         {
-            //修正位置
+            //直接修正位置
             transform.position = recv_state.position;
             transform.eulerAngles = recv_state.rotation;
         }
         else if(position_fix == PositionFix.LinearInterpolation)
         {
-            syncDelta = Time.time - lastState.lastSyncTime;
-            lastState.lastSyncTime = Time.time;
+            syncDelta = Time.time - lastMotionState.lastSyncTime;
+            lastMotionState.lastSyncTime = Time.time;
             smoothTick = syncDelta;
 
             forcastPosition = recv_state.position + recv_state.velocity * syncDelta;
@@ -252,17 +254,17 @@ public class PlayerController : MonoBehaviour
             velocity = recv_state.velocity;
 
             _originVeclocity = recv_state.velocity;
-            //hasSetVelocity = false;
         }
         else if (position_fix == PositionFix.CubicInterpolation)
         {
-            syncDelta = Time.time - lastState.lastSyncTime;
-            lastState.lastSyncTime = Time.time;
+            syncDelta = Time.time - lastMotionState.lastSyncTime;
+            lastMotionState.lastSyncTime = Time.time;
             smoothTick = syncDelta;
 
             Vector3 pos1 = transform.position;
             Vector3 pos4 = recv_state.position + recv_state.velocity * syncDelta;//这里用线性的速度预测
-            Vector3 pos2 = pos1 + GetComponent<Rigidbody>().velocity * 0.1f;
+            //Vector3 pos2 = pos1 + GetComponent<Rigidbody>().velocity * 0.1f;//这里的参数填错了
+            Vector3 pos2 = pos1 + velocity * 0.1f;
             Vector3 pos3 = pos4 - recv_state.velocity* 0.1f;
             A = pos4.x - 3 * pos3.x + 3 * pos2.x - pos1.x;
             B = 3 * pos3.x - 6 * pos2.x + 3 * pos1.x;
@@ -276,9 +278,6 @@ public class PlayerController : MonoBehaviour
             velocity = recv_state.velocity; 
 
             _originVeclocity = recv_state.velocity;
-            //清空物理速度
-            //GetComponent<Rigidbody>().velocity = Vector3.zero;
-            //hasSetVelocity = false;
         }
     }
 

@@ -26,13 +26,13 @@ public class PlayerMgr : MonoBehaviour
             }
             Count++;
         }
-        NetMgr.srvConn.msgDist.AddListener("SyncPlayerState", SyncPlayerState);
+        NetMgr.srvConn.msgDist.AddListener("SyncMotionState", SyncMotionState);
         NetMgr.srvConn.msgDist.AddListener("SyncPlayerFire", SyncPlayerFire);
         NetMgr.srvConn.msgDist.AddListener("SyncPlayerDie", SyncPlayerDie);
     }
     private void OnDestroy()
     {
-        NetMgr.srvConn.msgDist.DelListener("SyncPlayerState", SyncPlayerState);
+        NetMgr.srvConn.msgDist.DelListener("SyncMotionState", SyncMotionState);
         NetMgr.srvConn.msgDist.DelListener("SyncPlayerFire", SyncPlayerFire);
         NetMgr.srvConn.msgDist.DelListener("SyncPlayerDie", SyncPlayerDie);
     }
@@ -91,12 +91,12 @@ public class PlayerMgr : MonoBehaviour
 
     //同步玩家信息，使用影子跟随算法
     //该函数调用大约以每秒5次的频率调用，在这里看看是否有别的优化方案
-    public void SyncPlayerState(ProtocolBase proto)
+    public void SyncMotionState(ProtocolBase proto)
     {
         int start = 0;
         ProtocolBytes protocol = (ProtocolBytes)proto;
         string protoName = protocol.GetString(start, ref start);
-        if (protoName != "SyncPlayerState")
+        if (protoName != "SyncMotionState")
             return;
         string player_id = protocol.GetString(start, ref start);
 
@@ -116,21 +116,21 @@ public class PlayerMgr : MonoBehaviour
         Vector3 _velocity = new Vector3(vel_x, vel_y, vel_z);
 
         //根据id去更新PlayerController的信息
-        Debug.Log("SyncPlayerState " + player_id);
+        Debug.Log("SyncMotionState " + player_id);
         if (!m_playerControllerList.ContainsKey(player_id))
         {
-            Debug.Log("SyncPlayerState pc == null ");
+            Debug.Log("SyncMotionState pc == null ");
             return;
         }
         PlayerController pc = m_playerControllerList[player_id];
         if (player_id == GameMgr.instance.local_player_ID)//本地玩家的同步信息省略
             return;
 
-        SyncPlayerState recv_state = new SyncPlayerState();
+        MotionState recv_state = new MotionState();
         recv_state.position = _position;
         recv_state.rotation = _rotation;
         recv_state.velocity = _velocity;
 
-        pc.RecvPlayerState(recv_state);
+        pc.RecvMotionState(recv_state);
     }
 }
