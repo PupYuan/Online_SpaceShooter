@@ -93,7 +93,7 @@ if ((drPostion - transform.position).sqrMagnitude >= deadReckoningThreshold)
 
 线性插值的问题在于，平滑的过程的速度（从p0到p1）与位置修正完之后的预测速度会出现不一致，当E22的运动轨迹是非直线的时候。当延迟大并且E22的运动轨迹非常曲折的时候，会看到E12表现出僵硬的平移。
 
-![linear problem](Pictures/linear problem.jpg)
+![linear problem](Pictures/linearProblem.jpg)
 
 ### 立方体插值平滑修正
 
