@@ -21,7 +21,7 @@ public partial class HandlePlayerMsg
 	}
 	
 	//更新信息
-	public void MsgSyncPlayerState(Player player, ProtocolBase protoBase)
+	public void MsgSyncMotionState(Player player, ProtocolBase protoBase)
 	{
 		//获取数值
 		int start = 0;
@@ -41,7 +41,7 @@ public partial class HandlePlayerMsg
         //Scene.instance.UpdateInfo (player.id, x, y, z, score);
 		//广播
 		ProtocolBytes protocolRet = new ProtocolBytes();
-		protocolRet.AddString ("SyncPlayerState");
+		protocolRet.AddString ("SyncMotionState");
 		protocolRet.AddString (player.id);
 		protocolRet.AddFloat (pos_x);
 		protocolRet.AddFloat (pos_y);

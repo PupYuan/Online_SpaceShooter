@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 public class MatchingPanel : MonoBehaviour
 {
     public GameObject MenuPanel;
+    public string nextScene = "StateSynchronizationDemo";
     private void Awake()
     {
         NetMgr.srvConn.msgDist.AddOnceListener("StartGame", OnStartGame);
@@ -34,7 +35,7 @@ public class MatchingPanel : MonoBehaviour
             GameMgr.instance.player_list.Add(player);
         }
         //这里是简化过后的过程，如果场景很大，会导致配置差的玩家加载慢于配置好的玩家，应该用两次协议进行确认来尽可能地让两个玩家同时开始游戏
-        SceneManager.LoadScene("MultiPlayer-Game");
+        SceneManager.LoadScene(nextScene);
     }
     public void OnMatchingBack(ProtocolBase proto)
     {
