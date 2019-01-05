@@ -26,7 +26,9 @@ public class GameController : MonoBehaviour
     //用确定的随机数种子
     private System.Random random;
     private int totalHazrds = 0;//记录出现过的敌军总数
-    
+    public string MenuScene = "_StateSyncMenu";
+
+
 
     private void Awake()
     {
@@ -81,7 +83,7 @@ public class GameController : MonoBehaviour
 			if (Input.GetKeyDown (KeyCode.R))
 			{
                 //退回到主菜单
-                SceneManager.LoadScene("_Menu");
+                SceneManager.LoadScene(MenuScene);
                 //SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
 		}
