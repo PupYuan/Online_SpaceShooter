@@ -87,8 +87,8 @@ public class ProtocolBytes : ProtocolBase
 		else
 			bytes = bytes.Concat(numBytes).ToArray();
 	}
-	
-	public int GetInt(int start, ref int end)
+
+    public int GetInt(int start, ref int end)
 	{
 		if (bytes == null)
 			return 0;
@@ -104,8 +104,27 @@ public class ProtocolBytes : ProtocolBase
 		return GetInt (start, ref end);
 	}
 
+    public void AddUint(uint num)
+    {
+        byte[] numBytes = BitConverter.GetBytes(num);
+        if (bytes == null)
+            bytes = numBytes;
+        else
+            bytes = bytes.Concat(numBytes).ToArray();
+    }
 
-	public void AddFloat(float num)
+    public uint GetUint(int start, ref int end)
+    {
+        if (bytes == null)
+            return 0;
+        if (bytes.Length < start + sizeof(UInt32))
+            return 0;
+        end = start + sizeof(UInt32);
+        return BitConverter.ToUInt32(bytes, start);
+    }
+
+
+    public void AddFloat(float num)
 	{
 		byte[] numBytes = BitConverter.GetBytes (num);
 		if (bytes == null)

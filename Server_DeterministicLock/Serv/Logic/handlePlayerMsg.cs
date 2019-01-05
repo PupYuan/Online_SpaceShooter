@@ -27,6 +27,7 @@ public partial class HandlePlayerMsg
 		int start = 0;
 		ProtocolBytes protocol = (ProtocolBytes)protoBase;
 		string protoName = protocol.GetString (start, ref start);
+        uint KeyFrameNumber = protocol.GetUint(start, ref start);
         float x = protocol.GetFloat(start, ref start);
         float y = protocol.GetFloat(start, ref start);
         Command cmd = new Command();
@@ -45,6 +46,8 @@ public partial class HandlePlayerMsg
 		//广播
 		ProtocolBytes protocolRet = new ProtocolBytes();
 		protocolRet.AddString ("SyncCommand");
+        protocolRet.AddUint(KeyFrameNumber+5);//K1
+        protocolRet.AddUint(KeyFrameNumber+10);//K2
         protocolRet.AddInt(ServNet.instance.command_list.Count);
         foreach (var item in ServNet.instance.command_list)
         {

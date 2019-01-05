@@ -11,7 +11,18 @@ namespace DeterministicLockstepDemo
     }
     public class PlayerController : MonoBehaviour
     {
+        public string player_id;
+        private uint sequence = 0;//当前帧号
+        public uint KeyFrameInterval = 5;//固定法：关键帧之前相差固定帧数
+        public uint KeyFrameNumber = 0;//下一关键帧的帧号
         public CtrlType ctrlType = CtrlType.player;
+
+        //发送最开始的关键帧，此时关键帧号为0
+        private void Start()
+        {
+            SendCommand();//发送最开始的关键帧，帧号为0
+            KeyFrameNumber += KeyFrameInterval;//开始五帧的模拟为空
+        }
 
         private void FixedUpdate()
         {
@@ -28,20 +39,41 @@ namespace DeterministicLockstepDemo
 
         public void Simulate()
         {
-            //每次模拟都把采集的指令发给服务器
-            if(ctrlType == CtrlType.player)
+            //若当前是关键帧
+            if(sequence == KeyFrameNumber)
             {
-                Command cmd = new Command();
-                cmd.input = CollectCommandInput();      // 获取指令
-                //ExecuteCommand(cmd);                    // 执行指令
-                SendCommand(cmd);
+                //检查是否有K1的UPDATE数据
+                if (GameLoopMgr.instance.command_list.Count <= 0)
+                {
+                    return;//LockStep
+                }
+                else
+                {
+                    KeyFrameNumber = GameLoopMgr.instance.updateK2;
+                    SendCommand();
+                    ////执行属于自己的指令
+                    //ExecuteCommand(GameLoopMgr.instance.command_list[GameMgr.instance.local_player_ID]);
+                    ////移除掉刚刚执行掉的指令
+                    //GameLoopMgr.instance.command_list.Remove(GameMgr.instance.local_player_ID);
+                }
+            }
+            else//若当前处于模拟帧（即输入采取上一次关键帧时的输入I进行模拟）
+            {
+                if(GameLoopMgr.instance.command_list.ContainsKey(player_id))
+                    ExecuteCommand(GameLoopMgr.instance.command_list[player_id]);
+                sequence++;
             }
         }
 
-        public void SendCommand(Command cmd)
+        public void SendCommand()
         {
+            Command cmd = new Command();
+            cmd.input = CollectCommandInput();      // 获取指令
+            cmd.sequence = KeyFrameNumber;
+
             ProtocolBytes proto = new ProtocolBytes();
             proto.AddString("SyncCommand");
+            proto.AddUint(cmd.sequence);
             proto.AddFloat(cmd.input.x);
             proto.AddFloat(cmd.input.y);
 
