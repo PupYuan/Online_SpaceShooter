@@ -11,10 +11,12 @@ namespace DeterministicLockstepDemo
     }
     public class PlayerController : MonoBehaviour
     {
+        [HideInInspector]
         public string player_id;
         private uint sequence = 0;//当前帧号
         public uint KeyFrameInterval = 5;//固定法：关键帧之前相差固定帧数
         public uint KeyFrameNumber = 0;//下一关键帧的帧号
+        public float movingSpeed = 8;
         public CtrlType ctrlType = CtrlType.player;
 
         //发送最开始的关键帧，此时关键帧号为0
@@ -82,7 +84,6 @@ namespace DeterministicLockstepDemo
 
         public void ExecuteCommand(Command command)
         {
-            float movingSpeed = 4;
             Vector3 movingDir = Vector3.zero;
 
             movingDir.x = command.input.x;
