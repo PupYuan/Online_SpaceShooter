@@ -12,13 +12,13 @@ namespace DeterministicLockstepDemo
         public GridLayoutGroup PlayerInfo;
         public GameObject Text_playerPosPrefab;
         public Text Text_sequence;
-        private Dictionary<string, Text> Text_playerPosList = new Dictionary<string, Text>();
+        private SortedDictionary<string, Text> Text_playerPosList = new SortedDictionary<string, Text>();
 
         private uint ExecuteCommandNum = 0;
         public void AddExecuteCommandNum()
         {
             ExecuteCommandNum++;
-            Text_sequence.text = "ExecuteCommand Num " + ExecuteCommandNum;
+            Text_sequence.text = "LogicTick " + ExecuteCommandNum;
         }
         void Awake()
         {

@@ -10,39 +10,69 @@ namespace DeterministicLockstepDemo
         public static GameLoopMgr instance;
         public GameObject[] PlayerPrefab;
         //通过id来更新
-        public Dictionary<string, PlayerController> m_playerControllerList = new Dictionary<string, PlayerController>();
-        public Dictionary<string, Command> command_list = new Dictionary<string, Command>();
+        public SortedDictionary<string, PlayerController> m_playerControllerList = new SortedDictionary<string, PlayerController>();
+        public SortedDictionary<string, Command> command_list = new SortedDictionary<string, Command>();
 
         public uint updateK1 = 0;
         public uint updateK2 = 0;
         private uint sequence = 0;//当前帧号
         public uint KeyFrameInterval = 5;//固定法：关键帧之前相差固定帧数
         public uint KeyFrameNumber = 0;//下一关键帧的帧号
+
+        private float accumulatedTime = 0;
+        public int LogicTickRate = 30;//每秒30次logic 更新
         private void Awake()
         {
             instance = this;
-            
         }
+        private void Start()
+        {
+            SendCommand();//发送最开始的关键帧，帧号为0
+            KeyFrameNumber += KeyFrameInterval;//开始五帧的模拟为空
+            int Count = 0;//生成玩家时给予一个偏移量
+            foreach (var player in GameMgr.instance.player_list)
+            {
+                GameObject player_obj = (GameObject)Instantiate(PlayerPrefab[0], new Vector3(1, 0, 0) * Count, Quaternion.identity);
+                player_obj.name = player.id;//场景中生成的GameObject名字改成id
+                player_obj.GetComponent<PlayerController>().player_id = player.id;//每个实体都知道自己的id
+                if (player.id != GameMgr.instance.local_player_ID)
+                {
+                    player_obj.GetComponent<PlayerController>().ctrlType = CtrlType.net;//网络同步
+                    player_obj.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;//这里暂时不计入对网络玩家的碰撞
+
+                }
+                m_playerControllerList.Add(player.id, player_obj.GetComponent<PlayerController>());//加入的是引用，而不会新建PlayerController
+                Count++;
+            }
+            NetMgr.srvConn.msgDist.AddListener("SyncCommand", SyncCommand);
+        }
+
         //逻辑循环，目前直接使用FixUpdate
         private void FixedUpdate()
         {
-            Simulate();
+            accumulatedTime += Time.fixedDeltaTime;
+
+            while(accumulatedTime > (float)(1 / (Fix64)LogicTickRate))
+            {
+                Tick();
+                accumulatedTime -= (float)(1 / (Fix64)LogicTickRate);
+            }
         }
 
-        public void Simulate()
+        public void Tick()
         {
             //若当前是关键帧
             if (sequence == KeyFrameNumber)
             {
-                //检查是否有K1的UPDATE数据
-                if (command_list.Count <= 0)
+                //检查是否有K1的UPDATE数据，通过判断updateK1是否更新来判断
+                if (updateK1 < sequence)
                 {
                     Debug.Log("LockStep");
                     return;//LockStep
                 }
                 else
                 {
-                    KeyFrameNumber = GameLoopMgr.instance.updateK2;
+                    KeyFrameNumber = updateK2;
                     SendCommand();
                 }
             }
@@ -82,30 +112,6 @@ namespace DeterministicLockstepDemo
 
             NetMgr.srvConn.Send(proto);
         }
-
-
-        private void Start()
-        {
-            SendCommand();//发送最开始的关键帧，帧号为0
-            KeyFrameNumber += KeyFrameInterval;//开始五帧的模拟为空
-            int Count = 0;//生成玩家时给予一个偏移量
-            foreach (var player in GameMgr.instance.player_list)
-            {
-                GameObject player_obj = (GameObject)Instantiate(PlayerPrefab[0], new Vector3(1, 0, 0) * Count, Quaternion.identity);
-                player_obj.name = player.id;//场景中生成的GameObject名字改成id
-                player_obj.GetComponent<PlayerController>().player_id = player.id;//每个实体都知道自己的id
-                if (player.id != GameMgr.instance.local_player_ID)
-                {
-                    player_obj.GetComponent<PlayerController>().ctrlType = CtrlType.net;//网络同步
-                    player_obj.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;//这里暂时不计入对网络玩家的碰撞
-
-                }
-                m_playerControllerList.Add(player.id, player_obj.GetComponent<PlayerController>());//加入的是引用，而不会新建PlayerController
-                Count++;
-            }
-            NetMgr.srvConn.msgDist.AddListener("SyncCommand", SyncCommand);
-        }
-
 
         private void OnDestroy()
         {
