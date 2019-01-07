@@ -11,7 +11,15 @@ namespace DeterministicLockstepDemo
         public Text Text_packetSizePerSecond;
         public GridLayoutGroup PlayerInfo;
         public GameObject Text_playerPosPrefab;
+        public Text Text_sequence;
         private Dictionary<string, Text> Text_playerPosList = new Dictionary<string, Text>();
+
+        private uint ExecuteCommandNum = 0;
+        public void AddExecuteCommandNum()
+        {
+            ExecuteCommandNum++;
+            Text_sequence.text = "ExecuteCommand Num " + ExecuteCommandNum;
+        }
         void Awake()
         {
             if (!instance)
@@ -40,7 +48,7 @@ namespace DeterministicLockstepDemo
         {
             foreach (var player in GameLoopMgr.instance.m_playerControllerList)
             {
-                Text_playerPosList[player.Key].text = "Player:"+ player.Key+",X =" + player.Value.logicPosition.x + " ,Z=" + player.Value.logicPosition.z + ";";
+                Text_playerPosList[player.Key].text = "Player:"+ player.Key+",X =" + player.Value.logicPosition.x.ToStringRound(3) + " ,Z=" + player.Value.logicPosition.z.ToStringRound(3) + ";";
             }
         }
         //统计发送速率
