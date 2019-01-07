@@ -28,11 +28,11 @@ public partial class HandlePlayerMsg
 		ProtocolBytes protocol = (ProtocolBytes)protoBase;
 		string protoName = protocol.GetString (start, ref start);
         uint KeyFrameNumber = protocol.GetUint(start, ref start);
-        float x = protocol.GetFloat(start, ref start);
-        float y = protocol.GetFloat(start, ref start);
+        Fix64 x = protocol.GetFix(start, ref start);
+        Fix64 z = protocol.GetFix(start, ref start);
         Command cmd = new Command();
         cmd.input.x = x;
-        cmd.input.y = y;
+        cmd.input.z = z;
         //多线程处理消息，此时需要防止竞争
         lock (ServNet.instance.command_list)
         {
@@ -56,9 +56,11 @@ public partial class HandlePlayerMsg
             {
                 protocolRet.AddString(item.Key);
 
+                Console.WriteLine("item.Key " + item.Key);
+
                 Command _cmd = item.Value.Dequeue();
-                protocolRet.AddFloat(_cmd.input.x);
-                protocolRet.AddFloat(_cmd.input.y);
+                protocolRet.AddFix(_cmd.input.x);
+                protocolRet.AddFix(_cmd.input.z);
             }
             ServNet.instance.Broadcast(protocolRet);
         }

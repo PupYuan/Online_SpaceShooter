@@ -123,6 +123,24 @@ public class ProtocolBytes : ProtocolBase
         return BitConverter.ToUInt32(bytes, start);
     }
 
+    public void AddFix(Fix64 num)
+    {
+        byte[] numBytes = BitConverter.GetBytes(num.RawValue);
+        if (bytes == null)
+            bytes = numBytes;
+        else
+            bytes = bytes.Concat(numBytes).ToArray();
+    }
+
+    public Fix64 GetFix(int start, ref int end)
+    {
+        if (bytes == null)
+            return Fix64.FromRaw(0);
+        if (bytes.Length < start + sizeof(Int64))
+            return Fix64.FromRaw(0);
+        end = start + sizeof(UInt64);
+        return Fix64.FromRaw(BitConverter.ToInt64(bytes, start));
+    }
 
     public void AddFloat(float num)
 	{

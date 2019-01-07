@@ -17,8 +17,8 @@ public class Command
 //本游戏的输入类型为，横轴值horizontal，竖轴值vertical，开火trigger
 public class CommandInput
 {
-    public float x;
-    public float y;
+    public Fix64 x;
+    public Fix64 z;
     public bool fire;
 }
 

@@ -216,7 +216,7 @@ public class ServNet
 				return;
 			}
 			Object[] obj = new object[]{conn.player,protoBase};
-			Console.WriteLine ("[处理玩家消息]" + conn.player.id + " :" + name);
+			//Console.WriteLine ("[处理玩家消息]" + conn.player.id + " :" + name);
 			mm.Invoke (handlePlayerMsg, obj);
 		}
 	}

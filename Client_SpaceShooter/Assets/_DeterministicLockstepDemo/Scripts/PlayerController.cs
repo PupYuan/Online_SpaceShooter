@@ -16,14 +16,18 @@ namespace DeterministicLockstepDemo
         private uint sequence = 0;//当前帧号
         public uint KeyFrameInterval = 5;//固定法：关键帧之前相差固定帧数
         public uint KeyFrameNumber = 0;//下一关键帧的帧号
-        public float movingSpeed = 8;
+        public Fix64 movingSpeed = (Fix64)8;
         public CtrlType ctrlType = CtrlType.player;
+        public FixVector3 logicPosition = FixVector3.Zero;//逻辑位置，用于实际碰撞判断以及网络同步
 
         //发送最开始的关键帧，此时关键帧号为0
         private void Start()
         {
             SendCommand();//发送最开始的关键帧，帧号为0
             KeyFrameNumber += KeyFrameInterval;//开始五帧的模拟为空
+            logicPosition.x = (Fix64)transform.position.x;
+            logicPosition.y = (Fix64)transform.position.y;
+            logicPosition.z = (Fix64)transform.position.z;
         }
 
         private void FixedUpdate()
@@ -34,8 +38,8 @@ namespace DeterministicLockstepDemo
         public CommandInput CollectCommandInput()
         {
             CommandInput input = new CommandInput();
-            input.x = Input.GetAxis("Horizontal");
-            input.y = Input.GetAxis("Vertical");
+            input.x = (Fix64)Input.GetAxis("Horizontal");
+            input.z = (Fix64)Input.GetAxis("Vertical");
             return input;
         }
 
@@ -52,11 +56,8 @@ namespace DeterministicLockstepDemo
                 else
                 {
                     KeyFrameNumber = GameLoopMgr.instance.updateK2;
-                    SendCommand();
-                    ////执行属于自己的指令
-                    //ExecuteCommand(GameLoopMgr.instance.command_list[GameMgr.instance.local_player_ID]);
-                    ////移除掉刚刚执行掉的指令
-                    //GameLoopMgr.instance.command_list.Remove(GameMgr.instance.local_player_ID);
+                    if(ctrlType == CtrlType.player)
+                        SendCommand();
                 }
             }
             else//若当前处于模拟帧（即输入采取上一次关键帧时的输入I进行模拟）
@@ -76,24 +77,35 @@ namespace DeterministicLockstepDemo
             ProtocolBytes proto = new ProtocolBytes();
             proto.AddString("SyncCommand");
             proto.AddUint(cmd.sequence);
-            proto.AddFloat(cmd.input.x);
-            proto.AddFloat(cmd.input.y);
+            proto.AddFix(cmd.input.x);
+            proto.AddFix(cmd.input.z);
+            Debug.Log("cmd.input.x :" + cmd.input.x);
+            Debug.Log("cmd.input.z :" + cmd.input.z);
 
             NetMgr.srvConn.Send(proto);
         }
 
         public void ExecuteCommand(Command command)
         {
-            Vector3 movingDir = Vector3.zero;
+            FixVector3 movingDir = FixVector3.Zero;
 
             movingDir.x = command.input.x;
-            movingDir.z = command.input.y;
+            movingDir.z = command.input.z;
 
-            Vector3 velocity = movingDir * movingSpeed;                                  //通过输入计算出速度
+            Debug.Log("command.input.z :" + command.input.z);
 
-            transform.position = transform.position + velocity * Time.fixedDeltaTime;    //立即计算出结果
+            FixVector3 velocity = movingDir * movingSpeed;                                  //通过输入计算出速度
 
-            command.result.position = transform.position;                                //将结果保存到CommandResult中
+            
+            logicPosition += velocity * (Fix64)Time.fixedDeltaTime;
+            command.result.position = logicPosition;                                //将结果保存到CommandResult中
+        }
+        //渲染位置与逻辑位置分离，每次渲染前移动渲染位置到逻辑位置
+        private void Update()
+        {
+            //transform.position = Vector3.MoveTowards(transform.position, logicPosition.ToVector3(), (float)movingSpeed * Time.deltaTime);
+            transform.position = logicPosition.ToVector3();
+            Debug.Log("logicPosition :" + logicPosition);
         }
     }
 }

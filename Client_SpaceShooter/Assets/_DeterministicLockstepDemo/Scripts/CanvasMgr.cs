@@ -40,7 +40,7 @@ namespace DeterministicLockstepDemo
         {
             foreach (var player in GameLoopMgr.instance.m_playerControllerList)
             {
-                Text_playerPosList[player.Key].text = "Player:"+ player.Key+",X =" + player.Value.transform.position.x + " ,Z=" + player.Value.transform.position.z + ";";
+                Text_playerPosList[player.Key].text = "Player:"+ player.Key+",X =" + player.Value.logicPosition.x + " ,Z=" + player.Value.logicPosition.z + ";";
             }
         }
         //统计发送速率

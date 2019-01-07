@@ -57,17 +57,17 @@ namespace DeterministicLockstepDemo
             int player_num = protocol.GetInt(start, ref start);
 
             string player_id;
-            float x, y;
+            Fix64 x, z;
             Command cmd;
             command_list.Clear();//清空上一帧的command
             for (int i = 0; i < player_num; i++)
             {
                 player_id = protocol.GetString(start, ref start);
-                x = protocol.GetFloat(start, ref start);
-                y = protocol.GetFloat(start, ref start);
+                x = protocol.GetFix(start, ref start);
+                z = protocol.GetFix(start, ref start);
                 cmd = new Command();
                 cmd.input.x = x;
-                cmd.input.y = y;
+                cmd.input.z = z;
                 cmd.input.fire = false;
 
                 command_list.Add(player_id,cmd);//若不及时清理command_list，则会出现错误
