@@ -16,7 +16,7 @@ namespace DeterministicLockstepDemo
         }
         public GameObject[] PlayerPrefab;
         //通过id来更新
-        private Dictionary<string, PlayerController> m_playerControllerList = new Dictionary<string, PlayerController>();
+        public Dictionary<string, PlayerController> m_playerControllerList = new Dictionary<string, PlayerController>();
         public Dictionary<string,Command> command_list = new Dictionary<string, Command>();
         private void Start()
         {
