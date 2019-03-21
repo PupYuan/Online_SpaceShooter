@@ -32,9 +32,13 @@ namespace DeterministicLockstepDemo
 
             movingDir.x = command.input.x;
             movingDir.z = command.input.z;
+            if ((float)movingDir.x != 0 && (float)movingDir.z != 0)
+            {
+                Debug.Log("movingDir.x :" + movingDir.x + " ," + "movingDir.z :" + movingDir.z);
+                CanvasMgr.instance.AddExecuteCommandNum();
+            }
             FixVector3 velocity = movingDir * movingSpeed;                                  //通过输入计算出速度
             logicPosition += velocity * (Fix64)Time.fixedDeltaTime;
-            Debug.Log("(Fix64)Time.fixedDeltaTime :" + (Fix64)Time.fixedDeltaTime);
             command.result.position = logicPosition;                                //将结果保存到CommandResult中
         }
         //渲染位置与逻辑位置分离，每次渲染前移动渲染位置到逻辑位置
